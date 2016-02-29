@@ -11,25 +11,6 @@ $ git clone https://github.com/dceoy/del-tw.git
 $ cd del-tw
 ```
 
-Collection of Tweet Data
-------------------------
-
-Unzip an archive file
-
-```sh
-$ mkdir archive data
-$ cd archive
-$ unzip /path/to/your_twitter_archive.zip
-$ cd -
-```
-
-Gather tweet data to a json file
-
-```sh
-$ cat archive/data/js/tweets/*.js | sed -e 's/^Grailbird.*$/\[/' | sed -e 's/Grailbird.*$/,/g' > data/tweets.json
-$ echo ']' >> data/tweets.json
-```
-
 Deletion of Tweets
 ------------------
 
@@ -40,8 +21,8 @@ $ cp template_credentials.json credentials.json
 $ vi credentials.json   # => Enter keys
 ```
 
-Delete tweets by status id
+Delete archived tweets
 
 ```sh
-$ python delete_tw.py data/tweets.json
+$ python delete_tw.py /path/to/tweet_archive.zip
 ```
