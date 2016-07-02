@@ -1,9 +1,12 @@
-# del-tw
+deltw
+=====
 
 Ad-hoc Twitter Client to Delete Tweets by Status ID
 
 Setup of a Client
 -----------------
+
+Python (2.x or 3.x) is required.
 
 ```sh
 $ pip install -U requests_oauthlib
