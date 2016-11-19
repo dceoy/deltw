@@ -1,31 +1,36 @@
 deltw
 =====
 
-Ad-hoc Twitter Client to Delete Tweets by Status ID
+Tweet cleaner using [Twitter Archive](https://support.twitter.com/articles/20170160)
 
-Setup of a Client
------------------
+This tool extracts archived tweets, and deletes them from Twitter.
 
-Python (2.x or 3.x) is required.
+Installation
+------------
 
-```sh
-$ pip install -U requests_oauthlib
-$ git clone https://github.com/dceoy/del-tw.git
-$ cd del-tw
-```
-
-Deletion of Tweets
-------------------
-
-Set credentials.json
+Python 3 is required.
 
 ```sh
-$ cp template_credentials.json credentials.json
-$ vi credentials.json   # => Enter keys
+$ pip install git+https://github.com/dceoy/deltw
 ```
 
-Delete archived tweets
+Usage
+-----
 
-```sh
-$ python delete_tw.py /path/to/tweet_archive.zip
-```
+
+1.  Downloading your [Twitter archive](https://support.twitter.com/articles/20170160)
+
+2.  Set credentials to use Twitter API.
+
+    ```sh
+    $ deltw --init
+    $ vi tw_credentials.yml  # => Enter keys
+    ```
+
+3.  Delete archived tweets
+
+    ```sh
+    $ deltw --credentials tw_credentials.yml /path/to/tweet_archive.zip
+    ```
+
+Run `deltw --help` for more information about options

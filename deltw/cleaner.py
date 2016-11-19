@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-
+import yaml
+from requests_oauthlib import OAuth1Session
 from zipfile import ZipFile
 import re
 import json
 from functools import reduce
-import sys
-from requests_oauthlib import OAuth1Session
+import click
 
 
-def tw_session(json_path):
-    with open(json_path) as f:
-        cr = json.load(f)
+def create_session(yml_path):
+    with open(yml_path) as f:
+        cr = yaml.load(f)
 
     return(OAuth1Session(cr['consumer_key'],
                          cr['consumer_secret'],
@@ -19,8 +19,8 @@ def tw_session(json_path):
                          cr['access_token_secret']))
 
 
-def list_tw_ids(archive_zip):
-    def extract_id_str(js_path, zip_obj):
+def extract_tweet_ids(archive_zip):
+    def list_id_str(js_path, zip_obj):
         return(list(map(lambda t: t['id_str'],
                         json.loads(re.sub(r'^Grailbird[^=]+=', '',
                                           zip_obj.read(js_path).decode('utf-8'))))))
@@ -29,16 +29,13 @@ def list_tw_ids(archive_zip):
         tw_dir = 'data/js/tweets/'
         tw_js_files = filter(lambda n: re.match(tw_dir, n),
                              map(lambda f: f.filename, az.infolist()))
-        return(reduce(lambda a, b: a + b,
-                      map(lambda js: extract_id_str(js, az), tw_js_files)))
+        return(tuple(reduce(lambda a, b: a + b,
+                            map(lambda js: list_id_str(js, az), tw_js_files))))
 
 
-def delete_tw(session, id_str):
-    print('delete /status/%s' % id_str)
-    return(session.post('https://api.twitter.com/1.1/statuses/destroy/%s.json' % id_str))
+def delete_tweets(tw_session, *id_tuple):
+    def destroy_tw(tw_session, id):
+        click.echo('delete /status/%s' % id)
+        tw_session.post('https://api.twitter.com/1.1/statuses/destroy/%s.json' % id)
 
-
-if __name__ == '__main__':
-    data_path = sys.argv[1]
-    tw = tw_session('credentials.json')
-    [delete_tw(tw, id) for id in list_tw_ids(data_path)]
+    map(lambda id: destroy_tw(tw_session, id), id_tuple)
