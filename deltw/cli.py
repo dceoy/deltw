@@ -1,40 +1,55 @@
 #!/usr/bin/env python
 
-import argparse
+import os
+import yaml
+import click
 from . import __version__
-from .session import create_session
-from .cleaner import list_tweet_ids, delete_tweets
+from .cleaner import create_session, extract_tweet_ids, delete_tweets
+
+credentials_yml = 'tw_credentials.yml'
 
 
-def parse_arg_path():
-    parser = argparse.ArgumentParser(
-        prog='deltw',
-        description='Delete all of archived tweets from Twitter.'
-    )
-    parser.add_argument(
-        '-v', '--version',
-        action='version',
-        version='%(prog)s ' + __version__
-    )
-    parser.add_argument(
-        'archive_zip',
-        metavar='tweet_archive.zip',
-        help='a zip file of tweet archive containing tweets to delete'
-    )
-    parser.add_argument(
-        '--credentials',
-        dest='credentials_yml',
-        default='credentials.yml',
-        help='a yaml file for Twitter credentials (default: credentials.yml)'
-    )
-    return parser.parse_args()
+def write_credential_template(ctx, param, value):
+    yml = param.default
+    if os.path.exists(yml):
+        click.echo('%s already exists' % yml)
+    else:
+        with open(yml, 'w') as f:
+            f.write(yaml.dump({'consumer_key': '',
+                               'consumer_secret': '',
+                               'access_token': '',
+                               'access_token_secret': ''},
+                              default_flow_style=False))
+    ctx.exit()
 
 
-def main():
-    args = parse_arg_path()
-    tw = create_session(args.credentials_yml)
-    [delete_tweets(tw, id)
-     for id in list_tweet_ids(args.archive_zip)]
+@click.command()
+@click.option(
+    '--init',
+    is_flag=True,
+    default=credentials_yml,
+    callback=write_credential_template,
+    help='Write a YAML template `%s` for Twitter credentials'
+         % credentials_yml
+)
+@click.option(
+    '--credentials',
+    metavar='YAML',
+    show_default=True,
+    default=credentials_yml,
+    help='Read Twitter credentials from a YAML file'
+)
+@click.version_option(
+    version=__version__
+)
+@click.argument(
+    'archive_zip',
+    metavar='tweet_archive.zip',
+)
+def main(credentials, archive_zip):
+    """Delete all of archived tweets from Twitter."""
+    delete_tweets(create_session(credentials),
+                  extract_tweet_ids(archive_zip))
 
 
 if __name__ == '__main__':

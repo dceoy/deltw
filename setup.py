@@ -13,8 +13,9 @@ setup(
     author_email='d.narsil@gmail.com',
     url='https://github.com/dceoy/deltw',
     install_requires=[
+        'requests_oauthlib',
         'pyyaml',
-        'requests_oauthlib'
+        'click'
     ],
     entry_points={
         'console_scripts': ['deltw=deltw.cli:main'],
