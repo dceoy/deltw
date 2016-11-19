@@ -18,7 +18,7 @@ Usage
 -----
 
 
-1.  Downloading your [Twitter archive](https://support.twitter.com/articles/20170160)
+1.  Download your [Twitter archive](https://support.twitter.com/articles/20170160) as a ZIP file.
 
 2.  Set credentials to use Twitter API.
 
@@ -27,7 +27,7 @@ Usage
     $ vi tw_credentials.yml  # => Enter keys
     ```
 
-3.  Delete archived tweets
+3.  Delete archived tweets in your Twitter archive from Twitter.
 
     ```sh
     $ deltw --credentials tw_credentials.yml /path/to/tweet_archive.zip
