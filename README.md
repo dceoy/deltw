@@ -1,9 +1,9 @@
 deltw
 =====
 
-Tweet cleaner using [Twitter Archive](https://support.twitter.com/articles/20170160)
+Tweet cleaner to delete archived tweets in [Twitter Archive](https://support.twitter.com/articles/20170160) from Twitter
 
-This tool extracts archived tweets, and deletes them from Twitter.
+Twitter API: v1.1
 
 Installation
 ------------
@@ -11,7 +11,7 @@ Installation
 Python 3 is required.
 
 ```sh
-$ pip install git+https://github.com/dceoy/deltw
+$ pip install -U git+https://github.com/dceoy/deltw
 ```
 
 Usage
@@ -30,7 +30,7 @@ Usage
 3.  Delete archived tweets in your Twitter archive from Twitter.
 
     ```sh
-    $ deltw --credentials tw_credentials.yml /path/to/tweet_archive.zip
+    $ deltw --credentials tw_credentials.yml --archive /path/to/tweet_archive.zip
     ```
 
-Run `deltw --help` for more information about options
+Run `deltw --help` for more information about options.

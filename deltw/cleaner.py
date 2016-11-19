@@ -1,12 +1,24 @@
 #!/usr/bin/env python
 
+import os
 import yaml
 from requests_oauthlib import OAuth1Session
 from zipfile import ZipFile
 import re
 import json
 from functools import reduce
-import click
+
+
+def write_credential_template(yml_path):
+    if os.path.exists(yml_path):
+        print('%s already exists' % yml_path)
+    else:
+        with open(yml_path, 'w') as f:
+            f.write(yaml.dump({'consumer_key': '',
+                               'consumer_secret': '',
+                               'access_token': '',
+                               'access_token_secret': ''},
+                              default_flow_style=False))
 
 
 def create_session(yml_path):
@@ -29,13 +41,20 @@ def extract_tweet_ids(archive_zip):
         tw_dir = 'data/js/tweets/'
         tw_js_files = filter(lambda n: re.match(tw_dir, n),
                              map(lambda f: f.filename, az.infolist()))
-        return(tuple(reduce(lambda a, b: a + b,
-                            map(lambda js: list_id_str(js, az), tw_js_files))))
+        return(reduce(lambda a, b: a + b,
+                      map(lambda js: list_id_str(js, az), tw_js_files)))
 
 
-def delete_tweets(tw_session, *id_tuple):
-    def destroy_tw(tw_session, id):
-        click.echo('delete /status/%s' % id)
-        tw_session.post('https://api.twitter.com/1.1/statuses/destroy/%s.json' % id)
+def delete_tweets(tw_session, id_tuple, test_print=False):
+    def destroy_tw(tw_session, req):
+        print('  POST %s' % req)
+        tw_session.post(req)
 
-    map(lambda id: destroy_tw(tw_session, id), id_tuple)
+    reqs = tuple(map(lambda id: 'https://api.twitter.com/1.1/statuses/destroy/%s.json' % id,
+                     id_tuple))
+    if test_print:
+        print(*reqs, sep='\n')
+    else:
+        print('%d tweets are to be deleted:' % len(reqs))
+        [destroy_tw(tw_session, req) for req in reqs]
+        print('done.')
