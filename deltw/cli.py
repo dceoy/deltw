@@ -18,9 +18,16 @@ def parse_options(default_credentials):
     )
     parser.add_argument(
         '--init',
+        dest='init',
         action='store_true',
         help='Write `%s` as a YAML template for Twitter credentials'
              % default_credentials
+    )
+    parser.add_argument(
+        '--test-print',
+        dest='test_print',
+        action='store_true',
+        help='Print requests to delete tweets from Twitter and exit'
     )
     parser.add_argument(
         '--credentials',
@@ -45,7 +52,8 @@ def main(default_credentials='tw_credentials.yml'):
         write_credential_template(default_credentials)
     else:
         delete_tweets(create_session(arg.credentials),
-                      extract_tweet_ids(arg.zip_archive))
+                      extract_tweet_ids(arg.zip_archive),
+                      arg.test_print)
 
 
 if __name__ == '__main__':
