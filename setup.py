@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-from deltw import __version__
+from deltw import __version__, __description__
 
 
 setup(
     name='deltw',
     version=__version__,
+    description=__description__,
     packages=find_packages(),
-    description='Tweet Cleaner using Twitter Archive',
     author='Daichi Narushima',
     author_email='d.narsil@gmail.com',
     url='https://github.com/dceoy/deltw',

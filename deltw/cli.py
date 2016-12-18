@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from . import __version__
+from . import __version__, __description__
 from .cleaner import create_session, write_credential_template,\
                      extract_tweet_ids, delete_tweets
 
@@ -9,12 +9,12 @@ from .cleaner import create_session, write_credential_template,\
 def parse_options(default_credentials):
     parser = argparse.ArgumentParser(
         prog='deltw',
-        description='Delete all of archived tweets from Twitter.'
+        description=__description__
     )
     parser.add_argument(
         '-v', '--version',
         action='version',
-        version='%(prog)s ' + __version__
+        version='%(prog)s {}'.format(__version__)
     )
     parser.add_argument(
         '--init',
