@@ -5,6 +5,8 @@ Tweet cleaner to delete archived tweets in [Twitter Archive](https://support.twi
 
 Twitter API: v1.1
 
+[![wercker status](https://app.wercker.com/status/3a8a079c05b47177c33b968ab3f1bdd9/m/master "wercker status")](https://app.wercker.com/project/byKey/3a8a079c05b47177c33b968ab3f1bdd9)
+
 Installation
 ------------
 

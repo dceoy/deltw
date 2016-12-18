@@ -1,0 +1,33 @@
+box:
+  id: ubuntu
+  entrypoint: /bin/bash -c
+test:
+  steps:
+    - script:
+        name: Prepare required packages
+        code: |
+          apt-get -y update
+          apt-get -y install python3-pip
+    - script:
+        name: Install deltw
+        code: |
+          pip3 install -U pip
+          pip3 install .
+    - script:
+        name: Test base options
+        code: |
+          deltw --version
+          deltw --help
+    - script:
+        name: Test --init
+        code: |
+          deltw --init
+          cat tw_credentials.yml
+  after-steps:
+    - script:
+        code: |
+          apt-get -y update
+          apt-get -y install curl
+    - slack-notifier:
+        url: $SLACK_URL
+        channel: $SLACK_CHANNEL
