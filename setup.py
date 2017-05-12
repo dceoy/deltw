@@ -18,5 +18,26 @@ setup(
     ],
     entry_points={
         'console_scripts': ['deltw=deltw.cli:main'],
-    }
+    },
+    classifiers=[
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS',
+        'Environment :: Console',
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Topic :: Internet'
+    ],
+    long_description="""\
+deltw
+-----
+
+Tweet cleaner to delete archived tweets in [Twitter Archive](https://support.twitter.com/articles/20170160) from Twitter
+
+Twitter API: v1.1
+
+This version requires Python 3 or later.
+    """
 )
