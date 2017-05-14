@@ -13,7 +13,7 @@ Installation
 Python 3 is required.
 
 ```sh
-$ pip install -U git+https://github.com/dceoy/deltw
+$ pip install -U deltw
 ```
 
 Usage
