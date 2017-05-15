@@ -2,8 +2,7 @@
 
 import argparse
 from . import __version__, __description__
-from .cleaner import create_session, write_credential_template,\
-                     extract_tweet_ids, delete_tweets
+from .cleaner import write_credential_template, delete_tweets
 
 
 def parse_options(default_credentials):
@@ -20,8 +19,9 @@ def parse_options(default_credentials):
         '--init',
         dest='init',
         action='store_true',
-        help='Write `%s` as a YAML template for Twitter credentials'
-             % default_credentials
+        help='Write `{}` as a YAML template for Twitter credentials'.format(
+            default_credentials
+        )
     )
     parser.add_argument(
         '--test-print',
@@ -31,11 +31,12 @@ def parse_options(default_credentials):
     )
     parser.add_argument(
         '--credentials',
-        dest='credentials',
+        dest='credentials_yml',
         default=default_credentials,
         metavar='YAML',
-        help='Read Twitter credentials from a YAML file [default: %s]'
-             % default_credentials
+        help='Read Twitter credentials from a YAML file [default: {}]'.format(
+            default_credentials
+        )
     )
     parser.add_argument(
         '--archive',
@@ -51,10 +52,6 @@ def main(default_credentials='tw_credentials.yml'):
     if arg.init:
         write_credential_template(default_credentials)
     else:
-        delete_tweets(create_session(arg.credentials),
-                      extract_tweet_ids(arg.zip_archive),
-                      arg.test_print)
-
-
-if __name__ == '__main__':
-    main()
+        delete_tweets(credentials_yml=arg.credentials_yml,
+                      zip_archive=arg.zip_archive,
+                      test_print=arg.test_print)

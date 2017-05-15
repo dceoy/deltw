@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import os
-import yaml
-from requests_oauthlib import OAuth1Session
-from zipfile import ZipFile
-import re
-import json
 from functools import reduce
+import json
+import os
+import re
+import signal
+import yaml
+from zipfile import ZipFile
+from requests_oauthlib import OAuth1Session
 
 
 def write_credential_template(yml_path):
@@ -24,37 +25,38 @@ def write_credential_template(yml_path):
 def create_session(yml_path):
     with open(yml_path) as f:
         cr = yaml.load(f)
-
-    return(OAuth1Session(cr['consumer_key'],
+    return OAuth1Session(cr['consumer_key'],
                          cr['consumer_secret'],
                          cr['access_token'],
-                         cr['access_token_secret']))
+                         cr['access_token_secret'])
 
 
-def extract_tweet_ids(archive_zip):
-    def list_id_str(js_path, zip_obj):
-        return(list(map(lambda t: t['id_str'],
-                        json.loads(re.sub(r'^Grailbird[^=]+=', '',
-                                          zip_obj.read(js_path).decode('utf-8'))))))
-
-    with ZipFile(archive_zip) as az:
-        tw_dir = 'data/js/tweets/'
-        tw_js_files = filter(lambda n: re.match(tw_dir, n),
-                             map(lambda f: f.filename, az.infolist()))
-        return(reduce(lambda a, b: a + b,
-                      map(lambda js: list_id_str(js, az), tw_js_files)))
+def extract_all_ids(zip_archive):
+    with ZipFile(zip_archive) as za:
+        nested_id_lists = [
+            [t['id_str']
+             for t in json.loads(re.sub(r'^Grailbird[^=]+=', '',
+                                        za.read(j).decode('utf-8')))]
+            for j in filter(lambda f: re.match('data/js/tweets/', f.filename),
+                            za.infolist())
+        ]
+    return list(reduce(lambda a, b: a + b, nested_id_lists))
 
 
-def delete_tweets(tw_session, id_tuple, test_print=False):
-    def destroy_tw(tw_session, req):
-        print('  POST %s' % req)
-        tw_session.post(req)
+def make_requests(ids):
+    return ['https://api.twitter.com/1.1/statuses/destroy/{}.json'.format(id)
+            for id in ids]
 
-    reqs = tuple(map(lambda id: 'https://api.twitter.com/1.1/statuses/destroy/%s.json' % id,
-                     id_tuple))
+
+def delete_tweets(credentials_yml, zip_archive, test_print=False):
+    reqs = make_requests(ids=extract_all_ids(zip_archive=zip_archive))
     if test_print:
-        print(*reqs, sep='\n')
+        print(*reqs, sep=os.linesep)
     else:
+        tw_session = create_session(yml_path=credentials_yml)
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
         print('%d tweets are to be deleted:' % len(reqs))
-        [destroy_tw(tw_session, req) for req in reqs]
+        for req in reqs:
+            print('  POST %s' % req)
+            tw_session.post(req)
         print('done.')
