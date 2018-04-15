@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  deltw:
+    container_name: deltw
+    build:
+      context: .
+    image: dceoy/deltw:latest
+    volumes:
+      - ${PWD}:/work
+    working_dir: /work
