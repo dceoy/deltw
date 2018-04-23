@@ -76,7 +76,11 @@ def delete_tweets(credentials_yml, zip_archive, test_print=False, text_pattern=N
         tw_session = create_session(yml_path=credentials_yml)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         print('%d tweets are to be deleted:' % len(reqs))
+        status = 'done'
         for req in reqs:
-            print('  POST %s' % req)
-            tw_session.post(req)
-        print('done.')
+            rsp = tw_session.post(req)
+            print('  POST %s %r' % (req, rsp.status_code))
+            if rsp.status_code != 200:
+                status = 'failed'
+                break
+        print(status)
