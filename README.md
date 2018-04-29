@@ -10,10 +10,12 @@ Twitter API: v1.1
 Installation
 ------------
 
-Python 3 is required.
-
 ```sh
+# stable version at PyPI
 $ pip install -U deltw
+
+# latest version at GitHub
+$ pip install -U git+https://github.com/dceoy/deltw
 ```
 
 Usage
