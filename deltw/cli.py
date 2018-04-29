@@ -44,6 +44,11 @@ def parse_options(default_credentials):
         metavar='ZIP',
         help='a ZIP file of Twitter archive containing tweets to delete'
     )
+    parser.add_argument(
+        '--text-pattern',
+        dest='text_pattern',
+        help='Regex pattern of tweets to match'
+    )
     return parser.parse_args()
 
 
@@ -54,4 +59,5 @@ def main(default_credentials='tw_credentials.yml'):
     else:
         delete_tweets(credentials_yml=arg.credentials_yml,
                       zip_archive=arg.zip_archive,
-                      test_print=arg.test_print)
+                      test_print=arg.test_print,
+                      text_pattern=arg.text_pattern)

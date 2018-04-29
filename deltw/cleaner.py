@@ -31,16 +31,36 @@ def create_session(yml_path):
                          cr['access_token_secret'])
 
 
-def extract_all_ids(zip_archive):
-    with ZipFile(zip_archive) as za:
-        nested_id_lists = [
-            [t['id_str']
-             for t in json.loads(re.sub(r'^Grailbird[^=]+=', '',
-                                        za.read(j).decode('utf-8')))]
-            for j in filter(lambda f: re.match('data/js/tweets/', f.filename),
-                            za.infolist())
-        ]
-    return list(reduce(lambda a, b: a + b, nested_id_lists))
+def iter_tweet_files(zip_file):
+    """Generator yielding files with tweets
+    Args:
+    - zip_file: instance of ZipFile
+
+    Yields: instance of ZipInfo
+    """
+    for zip_info in zip_file.infolist():
+        if zip_info.filename.startswith('data/js/tweets'):
+            yield zip_info
+
+
+def decoded_tweets(zip_file, zip_info):
+    """Read provided zip_info from zip_file with JSON tweets
+     and return list of dict objects.
+    """
+    contents = zip_file.read(zip_info).decode('utf-8')
+    json_str = re.sub(r'^Grailbird[^=]+=', '', contents)
+    return json.loads(json_str)
+
+
+def filtered_ids(zip_archive, text_pattern=None):
+    "Generates ids with filtered tweets"
+    with ZipFile(zip_archive) as zip_file:
+        for zip_info in iter_tweet_files(zip_file):
+            for tweet in decoded_tweets(zip_file, zip_info):
+                if text_pattern is None:
+                    yield tweet['id']
+                elif re.search(text_pattern, tweet['text']):
+                    yield tweet['id']
 
 
 def make_requests(ids):
@@ -48,15 +68,19 @@ def make_requests(ids):
             for id in ids]
 
 
-def delete_tweets(credentials_yml, zip_archive, test_print=False):
-    reqs = make_requests(ids=extract_all_ids(zip_archive=zip_archive))
+def delete_tweets(credentials_yml, zip_archive, test_print=False, text_pattern=None):
+    reqs = make_requests(ids=filtered_ids(zip_archive, text_pattern))
     if test_print:
         print(*reqs, sep=os.linesep)
     else:
         tw_session = create_session(yml_path=credentials_yml)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         print('%d tweets are to be deleted:' % len(reqs))
+        status = 'done'
         for req in reqs:
-            print('  POST %s' % req)
-            tw_session.post(req)
-        print('done.')
+            rsp = tw_session.post(req)
+            print('  POST %s %r' % (req, rsp.status_code))
+            if rsp.status_code != 200:
+                status = 'failed'
+                break
+        print(status)
