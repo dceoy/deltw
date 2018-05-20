@@ -48,11 +48,13 @@ def write_credential_template(yml_path):
     else:
         logging.info('Write credential yaml: {}'.format(yml_path))
         with open(yml_path, 'w') as f:
-            f.write(yaml.dump({'consumer_key': '',
-                               'consumer_secret': '',
-                               'access_token': '',
-                               'access_token_secret': ''},
-                              default_flow_style=False))
+            f.write(yaml.dump(
+                {
+                    'consumer_key': '', 'consumer_secret': '',
+                    'access_token': '', 'access_token_secret': ''
+                },
+                default_flow_style=False
+            ))
 
 
 def _create_session(yml_path):
@@ -60,10 +62,10 @@ def _create_session(yml_path):
     with open(yml_path) as f:
         cr = yaml.load(f)
     logging.debug('cr: {}'.format(cr))
-    return OAuth1Session(cr['consumer_key'],
-                         cr['consumer_secret'],
-                         cr['access_token'],
-                         cr['access_token_secret'])
+    return OAuth1Session(
+        cr['consumer_key'], cr['consumer_secret'],
+        cr['access_token'], cr['access_token_secret']
+    )
 
 
 def _iter_tweet_files(zip_file):
@@ -95,8 +97,6 @@ def _filter_tweet_ids(zip_archive, regex=None):
             for tweet in _decoded_tweets(zf, zip_info):
                 if regex is None or re.search(regex, tweet['text']):
                     yield tweet['id']
-                else:
-                    pass
 
 
 def _id2req(id):
@@ -113,28 +113,33 @@ def delete_tweets(credentials_yml, zip_archive, test_print=False,
         tw_session = _create_session(yml_path=credentials_yml)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         print('Start to delete tweets.')
-        n_200 = 0
+        n_succeeded = 0
+        n_failed = 0
         for tw_id in tweet_ids:
             req = _id2req(tw_id)
             http_code = tw_session.post(req).status_code
             print('  POST {0} => {1}'.format(req, http_code))
             if http_code == 200:
-                n_200 += 1
+                n_succeeded += 1
                 logging.info(
                     '{}: HTTP request was received.'.format(http_code)
                 )
             else:
-                msg = (
+                n_failed += 1
+                warn = (
                     '{}: URL was not found.'.format(http_code)
                     if http_code == 404 else
                     '{}: HTTP request failed.'.format(http_code)
                 )
                 if ignore_error:
-                    logging.warning(msg)
+                    logging.warning(warn)
                 else:
-                    raise DeltwError(msg)
+                    raise DeltwError(warn)
+        msg = '{0} {1} deleted.'.format(
+            n_succeeded, ('tweets were' if n_succeeded > 1 else 'tweet was')
+        )
         print(
-            '{0} {1} deleted.'.format(
-                n_200, ('tweets were' if n_200 > 1 else 'tweet was')
-            )
+            '{0} (succeeded: {1}, failed: {2})'.format(
+                msg, n_succeeded, n_failed
+            ) if ignore_error else msg
         )
