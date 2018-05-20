@@ -24,18 +24,16 @@ def print_user_details(zip_path):
 
 
 def _validate_files(zip_path=None, yml_path=None):
-    if zip_path and not is_zipfile(os.path.expanduser(zip_path)):
-        raise DeltwError('invalid ZIP file: {}'.format(zip_path))
-    elif yml_path and not os.path.isfile(os.path.expanduser(yml_path)):
-        raise DeltwError('invalid ZIP file: {}'.format(zip_path))
+    if zip_path and not is_zipfile(zip_path):
+        raise DeltwError('invalid ZIP path: {}'.format(zip_path))
+    elif yml_path and not os.path.isfile(yml_path):
+        raise DeltwError('invalid YAML path: {}'.format(yml_path))
     else:
-        logging.debug(
-            'validatated: {}'.format([p for p in [zip_path, yml_path] if p])
-        )
+        logging.debug('Paths were validatated.')
 
 
 def _extract_user_details(zip_path):
-    with ZipFile(os.path.expanduser(zip_path)) as zf:
+    with ZipFile(zip_path) as zf:
         js_str = zf.read('data/js/user_details.js').decode('utf-8')
     user_details = json.loads(re.sub(r'^var user_details *=', '', js_str))
     logging.debug(
@@ -102,7 +100,7 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
 
 def _create_session(yml_path):
     logging.info('Create a Twitter session.')
-    with open(os.path.expanduser(yml_path)) as f:
+    with open(yml_path) as f:
         cr = yaml.load(f)
     logging.debug('cr: {}'.format(cr))
     return OAuth1Session(
@@ -123,7 +121,7 @@ def _extract_tweets(zipfile, zipinfo):
 def _extract_tweet_ids(zip_path, regex=None):
     """Extract tweet IDs
     """
-    with ZipFile(os.path.expanduser(zip_path)) as zf:
+    with ZipFile(zip_path) as zf:
         tw_js_names = [
             z.filename for z in zf.infolist()
             if z.filename.startswith('data/js/tweets')

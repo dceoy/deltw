@@ -12,7 +12,7 @@ def main():
     set_log_config(args=args)
     logging.debug('args:{0}{1}'.format(os.linesep, pformat(vars(args))))
     if args.subcommand == 'init':
-        write_credentials_template(yml_path=args.cred_yml_path)
+        write_credentials_template()
     elif args.subcommand == 'user':
         print_user_details(zip_path=args.zip_path)
     elif args.subcommand == 'urls':

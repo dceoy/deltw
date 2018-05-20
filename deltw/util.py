@@ -24,18 +24,22 @@ def parse_options():
     subparsers = parser.add_subparsers(
         title='subcommands', dest='subcommand'
     )
-    _add_cred_args(subparsers.add_parser(
-        'init', help='Write a YAML template of Twitter credentials'
-    ))
+    subparsers.add_parser(
+        'init',
+        help=(
+            'Write a YAML template of Twitter credentials '
+            'as `tw_credentials.yml`'
+        )
+    )
     _add_arch_args(subparsers.add_parser(
         'user', help='Extract user details from a ZIP file of Twitter Archive'
     ))
     _add_arch_args(subparsers.add_parser(
         'urls', help='Extract tweet URLs from a ZIP file of Twitter Archive'
     ))
-    _add_del_args(_add_arch_args(_add_cred_args(subparsers.add_parser(
+    _add_del_args(_add_arch_args(subparsers.add_parser(
         'delete', help='Delete archived tweets on Twitter'
-    ))))
+    )))
 
     log_parser = parser.add_mutually_exclusive_group()
     log_parser.add_argument(
@@ -47,18 +51,6 @@ def parse_options():
         help='Log with INFO level'
     )
     return parser.parse_args()
-
-
-def _add_cred_args(subparser, default_yml='tw_credentials.yml'):
-    subparser.add_argument(
-        '--credential', dest='cred_yml_path',
-        default=default_yml, metavar='YAML',
-        help=(
-            'Path to a YAML file for Twitter credentials '
-            '[default: {}]'.format(default_yml)
-        )
-    )
-    return subparser
 
 
 def _add_arch_args(subparser):
@@ -74,6 +66,10 @@ def _add_arch_args(subparser):
 
 
 def _add_del_args(subparser):
+    subparser.add_argument(
+        '--credential', dest='cred_yml_path', required=True, metavar='YAML',
+        help='Path to a YAML file for Twitter credentials'
+    )
     subparser.add_argument(
         '--ignore-error', dest='ignore_error', action='store_true',
         help='Ignore errors in HTTP requests'
@@ -94,13 +90,12 @@ def set_log_config(args):
     )
 
 
-def write_credentials_template(yml_path, default_yml='tw_credentials.yml'):
-    cred_yml = os.path.expanduser(yml_path or default_yml)
-    if os.path.exists(cred_yml):
-        print('A file already exists: {}'.format(cred_yml))
+def write_credentials_template(default_yml='tw_credentials.yml'):
+    if os.path.exists(default_yml):
+        print('A file already exists: {}'.format(default_yml))
     else:
-        print('Write YAML: {}'.format(cred_yml))
-        with open(cred_yml, 'w') as f:
+        print('Write YAML: {}'.format(default_yml))
+        with open(default_yml, 'w') as f:
             f.write(yaml.dump(
                 {
                     'consumer_key': '', 'consumer_secret': '',
