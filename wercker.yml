@@ -13,9 +13,9 @@ test:
           deltw --version
           deltw --help
     - script:
-        name: Test --init
+        name: Test init
         code: |
-          deltw --init
+          deltw init
           cat tw_credentials.yml
   after-steps:
     - slack-notifier:

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-from deltw import __version__, __description__
+from deltw import __version__
 
 
 setup(
     name='deltw',
     version=__version__,
-    description=__description__,
+    description='Twitter Cleaner to delete archived tweets',
     packages=find_packages(),
     author='Daichi Narushima',
     author_email='d.narsil@gmail.com',
@@ -17,7 +17,7 @@ setup(
         'pyyaml'
     ],
     entry_points={
-        'console_scripts': ['deltw=deltw.cli:main'],
+        'console_scripts': ['deltw=deltw.main:main'],
     },
     classifiers=[
         'Programming Language :: Python',
@@ -34,10 +34,9 @@ setup(
 deltw
 -----
 
-Tweet cleaner to delete archived tweets in [Twitter Archive](https://support.twitter.com/articles/20170160) from Twitter
+Twitter cleaner to delete archived tweets on Twitter using
+a [Twitter Archive](https://support.twitter.com/articles/20170160) file
 
 Twitter API: v1.1
-
-This version requires Python 3 or later.
     """
 )

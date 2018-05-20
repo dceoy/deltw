@@ -1,86 +1,137 @@
 #!/usr/bin/env python
 
-from functools import reduce
 import json
+import logging
 import os
+from pprint import pformat
 import re
 import signal
 import yaml
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 from requests_oauthlib import OAuth1Session
+from .util import DeltwError
 
 
-def write_credential_template(yml_path):
-    if os.path.exists(yml_path):
-        print('%s already exists' % yml_path)
+def print_user_details(zip_path):
+    """Print user details in a ZIP archive
+    """
+    logging.info('Print user details in a ZIP archive: {}'.format(zip_path))
+    _validate_files(zip_path=zip_path)
+    print(yaml.dump(
+        _extract_user_details(zip_path=zip_path),
+        default_flow_style=False, allow_unicode=True
+    ))
+
+
+def _validate_files(zip_path=None, yml_path=None):
+    if zip_path and not is_zipfile(zip_path):
+        raise DeltwError('invalid ZIP path: {}'.format(zip_path))
+    elif yml_path and not os.path.isfile(yml_path):
+        raise DeltwError('invalid YAML path: {}'.format(yml_path))
     else:
-        with open(yml_path, 'w') as f:
-            f.write(yaml.dump({'consumer_key': '',
-                               'consumer_secret': '',
-                               'access_token': '',
-                               'access_token_secret': ''},
-                              default_flow_style=False))
+        logging.debug('Paths were validatated.')
 
 
-def create_session(yml_path):
+def _extract_user_details(zip_path):
+    with ZipFile(zip_path) as zf:
+        js_str = zf.read('data/js/user_details.js').decode('utf-8')
+    user_details = json.loads(re.sub(r'^var user_details *=', '', js_str))
+    logging.debug(
+        'user_details:{0}{1}'.format(os.linesep, pformat(user_details))
+    )
+    return user_details
+
+
+def print_tweet_urls(zip_path, regex=None):
+    """Print URLs of tweets in a ZIP archive
+    """
+    logging.info('Print URLs of tweets in a ZIP archive: {}'.format(zip_path))
+    _validate_files(zip_path=zip_path)
+    screen_name = _extract_user_details(zip_path=zip_path)['screen_name']
+    print(
+        *[
+            'https://twitter.com/{0}/status/{1}'.format(screen_name, i)
+            for i in _extract_tweet_ids(zip_path=zip_path, regex=regex)
+        ],
+        sep=os.linesep
+    )
+
+
+def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
+    """Delete tweets on Twitter
+    """
+    logging.info('Delete tweets in a ZIP archive: {}'.format(zip_path))
+    _validate_files(zip_path=zip_path, yml_path=cred_yml_path)
+    tw_session = _create_session(yml_path=cred_yml_path)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    n_succeeded = 0
+    n_failed = 0
+    print('Start to delete tweets on Twitter.')
+    for tweet_id in _extract_tweet_ids(zip_path=zip_path, regex=regex):
+        req = 'https://api.twitter.com/1.1/statuses/destroy/{}.json'.format(
+            tweet_id
+        )
+        http_code = tw_session.post(req).status_code
+        print('  POST {0} => {1}'.format(req, http_code))
+        if http_code == 200:
+            n_succeeded += 1
+            logging.info('{}: HTTP request was received.'.format(http_code))
+        else:
+            n_failed += 1
+            warn = (
+                '{}: URL was not found.'.format(http_code)
+                if http_code == 404 else
+                '{}: HTTP request failed.'.format(http_code)
+            )
+            if ignore_error:
+                logging.warning(warn)
+            else:
+                raise DeltwError(warn)
+    print(
+        '{0} {1} deleted on Twitter.{2}'.format(
+            n_succeeded, ('tweets were' if n_succeeded > 1 else 'tweet was'),
+            (
+                ' (succeeded: {0}, failed: {1})'.format(n_succeeded, n_failed)
+                if ignore_error else ''
+            )
+        )
+    )
+
+
+def _create_session(yml_path):
+    logging.info('Create a Twitter session.')
     with open(yml_path) as f:
         cr = yaml.load(f)
-    return OAuth1Session(cr['consumer_key'],
-                         cr['consumer_secret'],
-                         cr['access_token'],
-                         cr['access_token_secret'])
+    logging.debug('cr: {}'.format(cr))
+    return OAuth1Session(
+        cr['consumer_key'], cr['consumer_secret'], cr['access_token'],
+        cr['access_token_secret']
+    )
 
 
-def iter_tweet_files(zip_file):
-    """Generator yielding files with tweets
-    Args:
-    - zip_file: instance of ZipFile
-
-    Yields: instance of ZipInfo
-    """
-    for zip_info in zip_file.infolist():
-        if zip_info.filename.startswith('data/js/tweets'):
-            yield zip_info
-
-
-def decoded_tweets(zip_file, zip_info):
+def _extract_tweets(zipfile, zipinfo):
     """Read provided zip_info from zip_file with JSON tweets
      and return list of dict objects.
     """
-    contents = zip_file.read(zip_info).decode('utf-8')
-    json_str = re.sub(r'^Grailbird[^=]+=', '', contents)
-    return json.loads(json_str)
+    return json.loads(
+        re.sub(r'^Grailbird[^=]+=', '', zipfile.read(zipinfo).decode('utf-8'))
+    )
 
 
-def filtered_ids(zip_archive, text_pattern=None):
-    "Generates ids with filtered tweets"
-    with ZipFile(zip_archive) as zip_file:
-        for zip_info in iter_tweet_files(zip_file):
-            for tweet in decoded_tweets(zip_file, zip_info):
-                if text_pattern is None:
+def _extract_tweet_ids(zip_path, regex=None):
+    """Extract tweet IDs
+    """
+    with ZipFile(zip_path) as zf:
+        tw_js_names = [
+            z.filename for z in zf.infolist()
+            if z.filename.startswith('data/js/tweets')
+        ]
+        logging.debug(
+            'js_paths_in_zip:{0}{1}'.format(os.linesep, pformat(tw_js_names))
+        )
+        for zip_info in tw_js_names:
+            for tweet in _extract_tweets(zf, zip_info):
+                if regex is None or re.search(regex, tweet['text']):
                     yield tweet['id']
-                elif re.search(text_pattern, tweet['text']):
-                    yield tweet['id']
-
-
-def make_requests(ids):
-    return ['https://api.twitter.com/1.1/statuses/destroy/{}.json'.format(id)
-            for id in ids]
-
-
-def delete_tweets(credentials_yml, zip_archive, test_print=False, text_pattern=None):
-    reqs = make_requests(ids=filtered_ids(zip_archive, text_pattern))
-    if test_print:
-        print(*reqs, sep=os.linesep)
-    else:
-        tw_session = create_session(yml_path=credentials_yml)
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-        print('%d tweets are to be deleted:' % len(reqs))
-        status = 'done'
-        for req in reqs:
-            rsp = tw_session.post(req)
-            print('  POST %s %r' % (req, rsp.status_code))
-            if rsp.status_code != 200:
-                status = 'failed'
-                break
-        print(status)
+                else:
+                    pass

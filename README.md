@@ -1,7 +1,7 @@
 deltw
 =====
 
-Tweet cleaner to delete archived tweets in [Twitter Archive](https://support.twitter.com/articles/20170160) from Twitter
+Twitter Tweet cleaner to delete archived tweets using a [Twitter Archive](https://support.twitter.com/articles/20170160) file
 
 Twitter API: v1.1
 
@@ -27,14 +27,14 @@ Usage
 2.  Set credentials to use Twitter API.
 
     ```sh
-    $ deltw --init
+    $ deltw init
     $ vi tw_credentials.yml  # => Enter keys
     ```
 
-3.  Delete archived tweets in your Twitter archive from Twitter.
+3.  Delete archived tweets in your Twitter archive on Twitter.
 
     ```sh
-    $ deltw --credentials tw_credentials.yml --archive /path/to/tweet_archive.zip
+    $ deltw delete --credential tw_credentials.yml --archive /path/to/tweet_archive.zip
     ```
 
 Run `deltw --help` for more information about options.
