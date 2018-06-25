@@ -10,7 +10,7 @@ setup(
     description='Twitter Cleaner to delete archived tweets',
     packages=find_packages(),
     author='Daichi Narushima',
-    author_email='d.narsil@gmail.com',
+    author_email='dnarsil+github@gmail.com',
     url='https://github.com/dceoy/deltw',
     install_requires=[
         'requests_oauthlib',
