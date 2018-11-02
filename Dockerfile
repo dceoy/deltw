@@ -1,4 +1,4 @@
-FROM python
+FROM python:slim
 
 ADD . /tmp/deltw
 
@@ -12,7 +12,8 @@ RUN set -e \
       && apt-get clean
 
 RUN set -e \
-      && pip install -U --no-cache-dir pip /tmp/deltw \
+      && pip install -U --no-cache-dir \
+        pip /tmp/deltw \
       && rm -rf /tmp/deltw
 
 ENTRYPOINT ["deltw"]

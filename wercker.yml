@@ -1,5 +1,6 @@
+---
 box:
-  id: dceoy/wercker-base:python
+  id: dceoy/jupyter:latest
   entrypoint: /bin/bash -c
 test:
   steps:
@@ -17,6 +18,10 @@ test:
         code: |
           deltw init
           cat tw_credentials.yml
+    - script:
+        name: Validate the codes using flake8
+        code: |
+          find . -name '*.py' | xargs flake8
   after-steps:
     - slack-notifier:
         url: $SLACK_URL

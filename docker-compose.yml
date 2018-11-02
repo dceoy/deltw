@@ -1,3 +1,4 @@
+---
 version: '3'
 
 services:
@@ -5,7 +6,10 @@ services:
     container_name: deltw
     build:
       context: .
+      dockerfile: Dockerfile
     image: dceoy/deltw:latest
     volumes:
-      - ${PWD}:/work
-    working_dir: /work
+      - ${PWD}:/wd
+    working_dir: /wd
+    entrypoint:
+      - deltw
