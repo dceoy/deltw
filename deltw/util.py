@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 import logging
+import os
+
 import yaml
+
 from . import __version__
 
 

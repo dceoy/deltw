@@ -3,8 +3,9 @@
 import logging
 import os
 from pprint import pformat
+
+from .cleaner import delete_tweets, print_tweet_urls, print_user_details
 from .util import parse_options, set_log_config, write_credentials_template
-from .cleaner import print_tweet_urls, print_user_details, delete_tweets
 
 
 def main():

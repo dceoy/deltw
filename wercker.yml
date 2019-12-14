@@ -9,6 +9,10 @@ test:
         code: |
           pip install .
     - script:
+        name: Validate the codes using flake8
+        code: |
+          find . -name '*.py' | xargs flake8 --no-isort-config
+    - script:
         name: Test base options
         code: |
           deltw --version
@@ -18,10 +22,6 @@ test:
         code: |
           deltw init
           cat tw_credentials.yml
-    - script:
-        name: Validate the codes using flake8
-        code: |
-          find . -name '*.py' | xargs flake8
   after-steps:
     - slack-notifier:
         url: $SLACK_URL

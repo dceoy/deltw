@@ -3,12 +3,14 @@
 import json
 import logging
 import os
-from pprint import pformat
 import re
 import signal
-import yaml
+from pprint import pformat
 from zipfile import ZipFile, is_zipfile
+
+import yaml
 from requests_oauthlib import OAuth1Session
+
 from .util import DeltwError
 
 
