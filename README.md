@@ -11,11 +11,7 @@ Installation
 ------------
 
 ```sh
-# stable version at PyPI
 $ pip install -U deltw
-
-# latest version at GitHub
-$ pip install -U git+https://github.com/dceoy/deltw
 ```
 
 Usage
