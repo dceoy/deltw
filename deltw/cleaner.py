@@ -103,7 +103,7 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
 def _create_session(yml_path):
     logging.info('Create a Twitter session.')
     with open(yml_path) as f:
-        cr = yaml.load(f)
+        cr = yaml.load(f, Loader=yaml.FullLoader)
     logging.debug('cr: {}'.format(cr))
     return OAuth1Session(
         cr['consumer_key'], cr['consumer_secret'], cr['access_token'],
