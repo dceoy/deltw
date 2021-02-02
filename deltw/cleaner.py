@@ -13,14 +13,14 @@ import yaml
 from requests_oauthlib import OAuth1Session
 
 
-def print_user_details(zip_path):
+def print_user_info(zip_path):
     """Print user details in a ZIP archive
     """
     logging.info(f'Print user details in a ZIP archive:\t{zip_path}')
     _validate_files(zip_path=zip_path)
     print(
         yaml.dump(
-            _extract_user_details(zip_path=zip_path),
+            _extract_user_info(zip_path=zip_path),
             default_flow_style=False, allow_unicode=True
         )
     )
@@ -35,12 +35,19 @@ def _validate_files(zip_path=None, yml_path=None):
         logging.debug('Paths were validatated.')
 
 
-def _extract_user_details(zip_path):
+def _extract_user_info(zip_path):
     with ZipFile(zip_path) as zf:
-        js_str = zf.read('data/js/user_details.js').decode('utf-8')
-    user_details = json.loads(re.sub(r'^var user_details *=', '', js_str))
-    logging.debug('user_details:' + os.linesep + pformat(user_details))
-    return user_details
+        name_set = set(zf.namelist())
+        if 'data/account.js' in name_set:
+            target = 'data/account.js'
+        elif 'data/js/user_details.js' in name_set:
+            target = 'data/js/user_details.js'
+        else:
+            raise ValueError('user info detection failed.')
+        js_str = zf.read(target).decode('utf-8')
+    user_info = json.loads(re.sub(r'^[^=]+=', '', js_str))
+    logging.debug('user_info:' + os.linesep + pformat(user_info))
+    return user_info
 
 
 def print_tweet_urls(zip_path, regex=None):
@@ -48,10 +55,16 @@ def print_tweet_urls(zip_path, regex=None):
     """
     logging.info(f'Print URLs of tweets in a ZIP archive: {zip_path}')
     _validate_files(zip_path=zip_path)
-    screen_name = _extract_user_details(zip_path=zip_path)['screen_name']
+    user_info = _extract_user_info(zip_path=zip_path)
+    if isinstance(user_info, list):
+        username = user_info[0]['account']['username']
+    elif isinstance(user_info, dict):
+        username = user_info['screen_name']
+    else:
+        raise RuntimeError('invalid user info')
     print(
         *[
-            f'https://twitter.com/{screen_name}/status/{i}'
+            f'https://twitter.com/{username}/status/{i}'
             for i in _extract_tweet_ids(zip_path=zip_path, regex=regex)
         ],
         sep=os.linesep
@@ -68,8 +81,8 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
     n_succeeded = 0
     n_failed = 0
     print('Start to delete tweets on Twitter.')
-    for tweet_id in _extract_tweet_ids(zip_path=zip_path, regex=regex):
-        req = f'https://api.twitter.com/1.1/statuses/destroy/{tweet_id}.json'
+    for id in _extract_tweet_ids(zip_path=zip_path, regex=regex):
+        req = f'https://api.twitter.com/1.1/statuses/destroy/{id}.json'
         http_code = tw_session.post(req).status_code
         print(f'  POST {req} => {http_code}')
         if http_code == 200:
@@ -107,27 +120,42 @@ def _create_session(yml_path):
     )
 
 
-def _extract_tweets(zipfile, zipinfo):
-    """Read provided zip_info from zip_file with JSON tweets
-      and return list of dict objects.
-    """
-    return json.loads(
-        re.sub(r'^Grailbird[^=]+=', '', zipfile.read(zipinfo).decode('utf-8'))
-    )
-
-
 def _extract_tweet_ids(zip_path, regex=None):
     """Extract tweet IDs
     """
     with ZipFile(zip_path) as zf:
-        tw_js_names = [
-            z.filename for z in zf.infolist()
-            if z.filename.startswith('data/js/tweets')
-        ]
-        logging.debug('js_paths_in_zip:' + os.linesep + pformat(tw_js_names))
-        for zip_info in tw_js_names:
-            for tweet in _extract_tweets(zf, zip_info):
-                if regex is None or re.search(regex, tweet['text']):
-                    yield tweet['id']
+        name_set = set(zf.namelist())
+        if 'data/tweet.js' in name_set:
+            tweets = json.loads(
+                re.sub(
+                    r'^[^=]+=', '', zf.read('data/tweet.js').decode('utf-8')
+                )
+            )
+            for d in tweets:
+                tw = d['tweet']
+                if regex is None or re.search(regex, tw['full_text']):
+                    yield tw['id']
                 else:
                     pass
+        elif 'data/js/tweets' in name_set:
+            tw_js_names = [
+                z.filename for z in zf.infolist()
+                if z.filename.startswith('data/js/tweets')
+            ]
+            logging.debug('tw_js_names:' + os.linesep + pformat(tw_js_names))
+            for js in tw_js_names:
+                for d in _extract_tweets_from_old_zip(zf, js):
+                    if regex is None or re.search(regex, d['text']):
+                        yield d['id']
+                    else:
+                        pass
+        else:
+            raise ValueError('tweet detection failed.')
+
+
+def _extract_tweets_from_old_zip(zipfile, zipinfo):
+    """Read zipinfo from zipfile with JSON tweets and return a dict list.
+    """
+    return json.loads(
+        re.sub(r'^[^=]+=', '', zipfile.read(zipinfo).decode('utf-8'))
+    )

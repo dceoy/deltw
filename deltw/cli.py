@@ -4,7 +4,7 @@ import logging
 import os
 from pprint import pformat
 
-from .cleaner import delete_tweets, print_tweet_urls, print_user_details
+from .cleaner import delete_tweets, print_tweet_urls, print_user_info
 from .util import parse_options, write_credentials_template
 
 
@@ -15,7 +15,7 @@ def main():
     if args.subcommand == 'init':
         write_credentials_template()
     elif args.subcommand == 'user':
-        print_user_details(zip_path=args.zip_path)
+        print_user_info(zip_path=args.zip_path)
     elif args.subcommand == 'urls':
         print_tweet_urls(zip_path=args.zip_path, regex=args.regex)
     elif args.subcommand == 'delete':

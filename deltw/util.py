@@ -27,8 +27,7 @@ def parse_options():
     )
     _add_arch_args(
         subparsers.add_parser(
-            'user',
-            help='Extract user details from a ZIP file of Twitter Archive'
+            'user', help='Extract user info from a ZIP file of Twitter Archive'
         )
     )
     _add_arch_args(

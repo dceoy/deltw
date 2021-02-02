@@ -18,7 +18,7 @@ setup(
     url='https://github.com/dceoy/deltw',
     packages=find_packages(),
     install_requires=['requests_oauthlib', 'pyyaml'],
-    entry_points={'console_scripts': ['deltw=deltw.main:main']},
+    entry_points={'console_scripts': ['deltw=deltw.cli:main']},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
