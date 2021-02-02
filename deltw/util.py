@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
-import logging
-import os
+from pathlib import Path
 
 import yaml
 
 from . import __version__
-
-
-class DeltwError(Exception):
-    pass
 
 
 def parse_options():
@@ -19,13 +14,10 @@ def parse_options():
         description='Delete archived tweets on Twitter using Twitter Archive'
     )
     parser.add_argument(
-        '-v', '--version', action='version',
-        version='%(prog)s {}'.format(__version__)
+        '--version', action='version', version=f'%(prog)s {__version__}'
     )
 
-    subparsers = parser.add_subparsers(
-        title='subcommands', dest='subcommand'
-    )
+    subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
     subparsers.add_parser(
         'init',
         help=(
@@ -33,15 +25,25 @@ def parse_options():
             'as `tw_credentials.yml`'
         )
     )
-    _add_arch_args(subparsers.add_parser(
-        'user', help='Extract user details from a ZIP file of Twitter Archive'
-    ))
-    _add_arch_args(subparsers.add_parser(
-        'urls', help='Extract tweet URLs from a ZIP file of Twitter Archive'
-    ))
-    _add_del_args(_add_arch_args(subparsers.add_parser(
-        'delete', help='Delete archived tweets on Twitter'
-    )))
+    _add_arch_args(
+        subparsers.add_parser(
+            'user',
+            help='Extract user details from a ZIP file of Twitter Archive'
+        )
+    )
+    _add_arch_args(
+        subparsers.add_parser(
+            'urls',
+            help='Extract tweet URLs from a ZIP file of Twitter Archive'
+        )
+    )
+    _add_del_args(
+        _add_arch_args(
+            subparsers.add_parser(
+                'delete', help='Delete archived tweets on Twitter'
+            )
+        )
+    )
 
     log_parser = parser.add_mutually_exclusive_group()
     log_parser.add_argument(
@@ -57,7 +59,7 @@ def parse_options():
 
 def _add_arch_args(subparser):
     subparser.add_argument(
-        '--archive', dest='zip_path', required=True, metavar='ZIP',
+        '-a', '--archive', dest='zip_path', required=True, metavar='ZIP',
         help='Path to a ZIP file of Twitter archive including tweets to delete'
     )
     subparser.add_argument(
@@ -69,8 +71,8 @@ def _add_arch_args(subparser):
 
 def _add_del_args(subparser):
     subparser.add_argument(
-        '--credential', dest='cred_yml_path', required=True, metavar='YAML',
-        help='Path to a YAML file for Twitter credentials'
+        '-c', '--credential', dest='cred_yml_path', required=True,
+        metavar='YAML', help='Path to a YAML file for Twitter credentials'
     )
     subparser.add_argument(
         '--ignore-error', dest='ignore_error', action='store_true',
@@ -79,29 +81,18 @@ def _add_del_args(subparser):
     return subparser
 
 
-def set_log_config(args):
-    if args.debug:
-        lv = logging.DEBUG
-    elif args.info:
-        lv = logging.INFO
-    else:
-        lv = logging.WARNING
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S', level=lv
-    )
-
-
 def write_credentials_template(default_yml='tw_credentials.yml'):
-    if os.path.exists(default_yml):
-        print('A file already exists: {}'.format(default_yml))
+    if Path(default_yml).is_file():
+        print(f'A file already exists:\t{default_yml}')
     else:
-        print('Write YAML: {}'.format(default_yml))
+        print(f'Write YAML:\t{default_yml}')
         with open(default_yml, 'w') as f:
-            f.write(yaml.dump(
-                {
-                    'consumer_key': '', 'consumer_secret': '',
-                    'access_token': '', 'access_token_secret': ''
-                },
-                default_flow_style=False
-            ))
+            f.write(
+                yaml.dump(
+                    {
+                        'consumer_key': '', 'consumer_secret': '',
+                        'access_token': '', 'access_token_secret': ''
+                    },
+                    default_flow_style=False
+                )
+            )
