@@ -62,8 +62,8 @@ def _add_arch_args(subparser):
         help='Path to a ZIP file of Twitter archive including tweets to delete'
     )
     subparser.add_argument(
-        '--text-pattern', dest='regex',
-        help='Regex pattern of tweets to match'
+        '-t', '--text-pattern', dest='pattern',
+        help='Select the tweets including the text pattern'
     )
     return subparser
 
@@ -74,7 +74,7 @@ def _add_del_args(subparser):
         metavar='YAML', help='Path to a YAML file for Twitter credentials'
     )
     subparser.add_argument(
-        '--ignore-error', dest='ignore_error', action='store_true',
+        '--ignore-errors', dest='ignore_errors', action='store_true',
         help='Ignore errors in HTTP requests'
     )
     return subparser

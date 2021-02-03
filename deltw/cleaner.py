@@ -50,7 +50,7 @@ def _extract_user_info(zip_path):
     return user_info
 
 
-def print_tweet_urls(zip_path, regex=None):
+def print_tweet_urls(zip_path, pattern=None):
     """Print URLs of tweets in a ZIP archive
     """
     logging.info(f'Print URLs of tweets in a ZIP archive: {zip_path}')
@@ -65,13 +65,13 @@ def print_tweet_urls(zip_path, regex=None):
     print(
         *[
             f'https://twitter.com/{username}/status/{i}'
-            for i in _extract_tweet_ids(zip_path=zip_path, regex=regex)
+            for i in _extract_tweet_ids(zip_path=zip_path, pattern=pattern)
         ],
         sep=os.linesep
     )
 
 
-def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
+def delete_tweets(zip_path, cred_yml_path, ignore_errors=False, pattern=None):
     """Delete tweets on Twitter
     """
     logging.info(f'Delete tweets in a ZIP archive: {zip_path}')
@@ -81,7 +81,7 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
     n_succeeded = 0
     n_failed = 0
     print('Start to delete tweets on Twitter.')
-    for id in _extract_tweet_ids(zip_path=zip_path, regex=regex):
+    for id in _extract_tweet_ids(zip_path=zip_path, pattern=pattern):
         req = f'https://api.twitter.com/1.1/statuses/destroy/{id}.json'
         http_code = tw_session.post(req).status_code
         print(f'  POST {req} => {http_code}')
@@ -94,7 +94,7 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
                 f'{http_code}: URL was not found.' if http_code == 404
                 else f'{http_code}: HTTP request failed.'
             )
-            if ignore_error:
+            if ignore_errors:
                 logging.warning(warn)
             else:
                 raise RuntimeError(warn)
@@ -103,7 +103,7 @@ def delete_tweets(zip_path, cred_yml_path, ignore_error=False, regex=None):
             n_succeeded, ('tweets were' if n_succeeded > 1 else 'tweet was'),
             (
                 f' (succeeded: {n_succeeded}, failed: {n_failed})'
-                if ignore_error else ''
+                if ignore_errors else ''
             )
         )
     )
@@ -120,7 +120,7 @@ def _create_session(yml_path):
     )
 
 
-def _extract_tweet_ids(zip_path, regex=None):
+def _extract_tweet_ids(zip_path, pattern=None):
     """Extract tweet IDs
     """
     with ZipFile(zip_path) as zf:
@@ -133,7 +133,7 @@ def _extract_tweet_ids(zip_path, regex=None):
             )
             for d in tweets:
                 tw = d['tweet']
-                if regex is None or re.search(regex, tw['full_text']):
+                if pattern is None or re.search(pattern, tw['full_text']):
                     yield tw['id']
                 else:
                     pass
@@ -145,7 +145,7 @@ def _extract_tweet_ids(zip_path, regex=None):
             logging.debug('tw_js_names:' + os.linesep + pformat(tw_js_names))
             for js in tw_js_names:
                 for d in _extract_tweets_from_old_zip(zf, js):
-                    if regex is None or re.search(regex, d['text']):
+                    if pattern is None or re.search(pattern, d['text']):
                         yield d['id']
                     else:
                         pass

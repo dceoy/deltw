@@ -17,13 +17,11 @@ def main():
     elif args.subcommand == 'user':
         print_user_info(zip_path=args.zip_path)
     elif args.subcommand == 'urls':
-        print_tweet_urls(zip_path=args.zip_path, regex=args.regex)
+        print_tweet_urls(zip_path=args.zip_path, pattern=args.pattern)
     elif args.subcommand == 'delete':
         delete_tweets(
-            zip_path=args.zip_path,
-            cred_yml_path=args.cred_yml_path,
-            ignore_error=args.ignore_error,
-            regex=args.regex
+            zip_path=args.zip_path, cred_yml_path=args.cred_yml_path,
+            ignore_errors=args.ignore_errors, pattern=args.pattern
         )
 
 
