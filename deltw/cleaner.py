@@ -137,7 +137,7 @@ def _extract_tweet_ids(zip_path, pattern=None):
                     yield tw['id']
                 else:
                     pass
-        elif 'data/js/tweets' in name_set:
+        elif {n for n in name_set if n.startswith('data/js/tweets/')}:
             tw_js_names = [
                 z.filename for z in zf.infolist()
                 if z.filename.startswith('data/js/tweets')
