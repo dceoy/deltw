@@ -5,8 +5,8 @@ Twitter Tweet cleaner to delete archived tweets using a [Twitter Archive](https:
 
 Twitter API: v1.1
 
-[![wercker status](https://app.wercker.com/status/3a8a079c05b47177c33b968ab3f1bdd9/s/master "wercker status")](https://app.wercker.com/project/byKey/3a8a079c05b47177c33b968ab3f1bdd9)
-![Upload Python Package](https://github.com/dceoy/deltw/workflows/Upload%20Python%20Package/badge.svg)
+[![Test](https://github.com/dceoy/deltw/actions/workflows/test.yml/badge.svg)](https://github.com/dceoy/deltw/actions/workflows/test.yml)
+[![Upload Python Package](https://github.com/dceoy/deltw/actions/workflows/python-publish.yml/badge.svg)](https://github.com/dceoy/deltw/actions/workflows/python-publish.yml)
 
 Installation
 ------------
