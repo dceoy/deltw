@@ -125,7 +125,17 @@ def _extract_tweet_ids(zip_path, pattern=None):
     """
     with ZipFile(zip_path) as zf:
         name_set = set(zf.namelist())
-        if 'data/tweet.js' in name_set:
+        if 'data/tweets.js' in name_set:
+            tweets = json.loads(
+                re.sub(
+                    r'^[^=]+=', '', zf.read('data/tweets.js').decode('utf-8')
+                )
+            )
+            for d in tweets:
+                tw = d['tweet']
+                if pattern is None or re.search(pattern, tw['full_text']):
+                    yield tw['id']
+        elif 'data/tweet.js' in name_set:
             tweets = json.loads(
                 re.sub(
                     r'^[^=]+=', '', zf.read('data/tweet.js').decode('utf-8')
@@ -135,8 +145,6 @@ def _extract_tweet_ids(zip_path, pattern=None):
                 tw = d['tweet']
                 if pattern is None or re.search(pattern, tw['full_text']):
                     yield tw['id']
-                else:
-                    pass
         elif {n for n in name_set if n.startswith('data/js/tweets/')}:
             tw_js_names = [
                 z.filename for z in zf.infolist()
@@ -147,8 +155,6 @@ def _extract_tweet_ids(zip_path, pattern=None):
                 for d in _extract_tweets_from_old_zip(zf, js):
                     if pattern is None or re.search(pattern, d['text']):
                         yield d['id']
-                    else:
-                        pass
         else:
             raise ValueError('tweet detection failed.')
 
