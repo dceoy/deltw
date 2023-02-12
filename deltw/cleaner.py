@@ -76,23 +76,25 @@ def delete_tweets(zip_path, cred_yml_path, ignore_errors=False, pattern=None):
     """
     logging.info(f'Delete tweets in a ZIP archive: {zip_path}')
     _validate_files(zip_path=zip_path, yml_path=cred_yml_path)
-    tw_session = _create_session(yml_path=cred_yml_path)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+    tw_session = _create_session(yml_path=cred_yml_path)
     n_succeeded = 0
     n_failed = 0
     print('Start to delete tweets on Twitter.')
     for id in _extract_tweet_ids(zip_path=zip_path, pattern=pattern):
-        req = f'https://api.twitter.com/1.1/statuses/destroy/{id}.json'
-        http_code = tw_session.post(req).status_code
-        print(f'  POST {req} => {http_code}')
-        if http_code == 200:
+        req = f'https://api.twitter.com/2/tweets/{id}'
+        response = tw_session.delete(req)
+        print(f'  POST {req} => {response.status_code}')
+        logging.debug(f'response:{os.linesep}{response.json()}')
+        if response.status_code == 200:
             n_succeeded += 1
-            logging.info(f'{http_code}: HTTP request was received.')
+            logging.info(f'{response.status_code}: HTTP request was received.')
         else:
             n_failed += 1
             warn = (
-                f'{http_code}: URL was not found.' if http_code == 404
-                else f'{http_code}: HTTP request failed.'
+                f'{response.status_code}: URL was not found.'
+                if response.status_code == 404
+                else f'{response.status_code}: HTTP request failed.'
             )
             if ignore_errors:
                 logging.warning(warn)
@@ -114,10 +116,48 @@ def _create_session(yml_path):
     with open(yml_path) as f:
         cr = yaml.load(f, Loader=yaml.FullLoader)
     logging.debug(f'cr: {cr}')
-    return OAuth1Session(
-        cr['consumer_key'], cr['consumer_secret'], cr['access_token'],
-        cr['access_token_secret']
-    )
+    if cr.get('access_token') and cr.get('access_token_secret'):
+        return OAuth1Session(
+            client_key=cr['consumer_key'], client_secret=cr['consumer_secret'],
+            resource_owner_key=cr['access_token'],
+            resource_owner_secret=cr['access_token_secret']
+        )
+    else:
+        oauth = OAuth1Session(
+            client_key=cr['consumer_key'], client_secret=cr['consumer_secret']
+        )
+        try:
+            fetch_response = oauth.fetch_request_token(
+                'https://api.twitter.com/oauth/request_token'
+            )
+        except ValueError as e:
+            logging.error(
+                'There may have been an issue'
+                ' with the client_key or client_secret.'
+            )
+            raise e
+        else:
+            resource_owner_key = fetch_response.get('oauth_token')
+            resource_owner_secret = fetch_response.get('oauth_token_secret')
+        authorization_url = oauth.authorization_url(
+            'https://api.twitter.com/oauth/authorize'
+        )
+        print(f'Please go here and authorize:{os.linesep}{authorization_url}')
+        verifier = input('Paste the PIN here: ')
+        oauth = OAuth1Session(
+            client_key=cr['consumer_key'], client_secret=cr['consumer_secret'],
+            resource_owner_key=resource_owner_key,
+            resource_owner_secret=resource_owner_secret,
+            verifier=verifier
+        )
+        oauth_tokens = oauth.fetch_access_token(
+            'https://api.twitter.com/oauth/access_token'
+        )
+        return OAuth1Session(
+            client_key=cr['consumer_key'], client_secret=cr['consumer_secret'],
+            resource_owner_key=oauth_tokens['oauth_token'],
+            resource_owner_secret=oauth_tokens['oauth_token_secret']
+        )
 
 
 def _extract_tweet_ids(zip_path, pattern=None):
