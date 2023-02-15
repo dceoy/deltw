@@ -123,40 +123,58 @@ def _create_session(yml_path):
             resource_owner_secret=cr['access_token_secret']
         )
     else:
-        oauth = OAuth1Session(
+        req_session = OAuth1Session(
             client_key=cr['consumer_key'], client_secret=cr['consumer_secret']
         )
+        req_response = req_session.post(
+            'https://api.twitter.com/oauth/request_token',
+            params={'oauth_callback': cr['callback_url']}
+        )
+        logging.debug(f'req_response: {req_response}')
+        logging.info(f'req_response.text: {req_response.text}')
         try:
-            fetch_response = oauth.fetch_request_token(
-                'https://api.twitter.com/oauth/request_token'
-            )
+            req_token_dict = dict([
+                s.split('=', maxsplit=1) for s in req_response.text.split('&')
+            ])
         except ValueError as e:
-            logging.error(
-                'There may have been an issue'
-                ' with the client_key or client_secret.'
-            )
+            logging.error(req_response.text)
             raise e
         else:
-            resource_owner_key = fetch_response.get('oauth_token')
-            resource_owner_secret = fetch_response.get('oauth_token_secret')
-        authorization_url = oauth.authorization_url(
-            'https://api.twitter.com/oauth/authorize'
+            logging.debug(f'req_token_dict: {req_token_dict}')
+            assert 'oauth_token' in req_token_dict, req_response.text
+        print(
+            'Please go here and authorize:',
+            'https://api.twitter.com/oauth/authenticate?oauth_token={}'.format(
+                req_token_dict['oauth_token']
+            )
         )
-        print(f'Please go here and authorize:{os.linesep}{authorization_url}')
-        verifier = input('Paste the PIN here: ')
-        oauth = OAuth1Session(
+        oauth_verifier = input('Paste the OAuth verifier here: ')
+        acc_session = OAuth1Session(
             client_key=cr['consumer_key'], client_secret=cr['consumer_secret'],
-            resource_owner_key=resource_owner_key,
-            resource_owner_secret=resource_owner_secret,
-            verifier=verifier
+            resource_owner_key=req_token_dict['oauth_token'],
+            resource_owner_secret=oauth_verifier
         )
-        oauth_tokens = oauth.fetch_access_token(
-            'https://api.twitter.com/oauth/access_token'
+        acc_response = acc_session.post(
+            'https://api.twitter.com/oauth/access_token',
+            params={'oauth_verifier': oauth_verifier}
         )
+        logging.debug(f'acc_response: {acc_response}')
+        logging.info(f'acc_response.text: {acc_response.text}')
+        try:
+            acc_token_dict = dict([
+                s.split('=', maxsplit=1) for s in acc_response.text.split('&')
+            ])
+        except ValueError as e:
+            logging.error(acc_response.text)
+            raise e
+        else:
+            logging.debug(f'acc_token_dict: {acc_token_dict}')
+            for k in ['oauth_token', 'oauth_token_secret']:
+                assert k in acc_token_dict, acc_response.text
         return OAuth1Session(
             client_key=cr['consumer_key'], client_secret=cr['consumer_secret'],
-            resource_owner_key=oauth_tokens['oauth_token'],
-            resource_owner_secret=oauth_tokens['oauth_token_secret']
+            resource_owner_key=acc_token_dict['oauth_token'],
+            resource_owner_secret=acc_token_dict['oauth_token_secret']
         )
 
 

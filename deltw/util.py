@@ -88,7 +88,10 @@ def write_credentials_template(default_yml='tw_credentials.yml'):
         with open(default_yml, 'w') as f:
             f.write(
                 yaml.dump(
-                    {'consumer_key': '', 'consumer_secret': ''},
+                    {
+                        'consumer_key': '', 'consumer_secret': '',
+                        'callback_url': 'http://127.0.0.1/'
+                    },
                     default_flow_style=False
                 )
             )
