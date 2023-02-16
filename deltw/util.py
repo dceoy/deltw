@@ -90,7 +90,7 @@ def write_credentials_template(default_yml='tw_credentials.yml'):
                 yaml.dump(
                     {
                         'consumer_key': '', 'consumer_secret': '',
-                        'callback_url': 'http://127.0.0.1/'
+                        'access_token': '', 'access_token_secret': ''
                     },
                     default_flow_style=False
                 )

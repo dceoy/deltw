@@ -3,7 +3,7 @@ deltw
 
 Twitter Tweet cleaner to delete archived tweets using a [Twitter Archive](https://support.twitter.com/articles/20170160) file
 
-Twitter API: v2
+Twitter API: v1.1
 
 [![Test](https://github.com/dceoy/deltw/actions/workflows/test.yml/badge.svg)](https://github.com/dceoy/deltw/actions/workflows/test.yml)
 [![Upload Python Package](https://github.com/dceoy/deltw/actions/workflows/python-publish.yml/badge.svg)](https://github.com/dceoy/deltw/actions/workflows/python-publish.yml)

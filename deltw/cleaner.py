@@ -71,7 +71,8 @@ def print_tweet_urls(zip_path, pattern=None):
     )
 
 
-def delete_tweets(zip_path, cred_yml_path, ignore_errors=False, pattern=None):
+def delete_tweets(zip_path, cred_yml_path, ignore_errors=False, pattern=None,
+                  apiv2=False):
     """Delete tweets on Twitter
     """
     logging.info(f'Delete tweets in a ZIP archive: {zip_path}')
@@ -82,8 +83,12 @@ def delete_tweets(zip_path, cred_yml_path, ignore_errors=False, pattern=None):
     n_failed = 0
     print('Start to delete tweets on Twitter.')
     for id in _extract_tweet_ids(zip_path=zip_path, pattern=pattern):
-        req = f'https://api.twitter.com/2/tweets/{id}'
-        response = tw_session.delete(req)
+        if apiv2:
+            req = f'https://api.twitter.com/2/tweets/{id}'
+            response = tw_session.delete(req)
+        else:
+            req = f'https://api.twitter.com/1.1/statuses/destroy/{id}.json'
+            response = tw_session.post(req)
         print(f'  POST {req} => {response.status_code}')
         logging.debug(f'response:{os.linesep}{response.json()}')
         if response.status_code == 200:
